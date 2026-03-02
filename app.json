@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "CareWell",
+    "slug": "carewell",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["android", "ios"],
+    "assetBundlePatterns": ["**/*"],
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    }
+  }
+}
