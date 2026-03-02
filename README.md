@@ -1,6 +1,6 @@
-# Cuidabien (mobile app)
+# CareWell (mobile app)
 
-Expo + React Native + TypeScript starter for the "Cuidabien" companion app. All content and UI copy are in English per the assignment requirement.
+Expo + React Native + TypeScript app for the CareWell companion. All content and UI copy are in English per the assignment requirement.
 
 ## Getting started
 1) Install dependencies: `npm install`
@@ -13,23 +13,29 @@ Expo + React Native + TypeScript starter for the "Cuidabien" companion app. All 
 
 ## Project layout
 - `App.tsx`: app root with navigation and theming provider
-- `src/navigation/RootNavigator.tsx`: stack navigation (Home screen wired)
-- `src/screens/HomeScreen.tsx`: placeholder UI for quick actions
+- `src/navigation/RootNavigator.tsx`: bottom-tab navigation
+- `src/screens`: Home, Meds, Symptoms, Checklist, Caregiver, Settings
 - `src/theme`: theme tokens and hook (`useTheme`)
-- `src/components`, `src/hooks`, `src/lib`: ready for shared code
+- `src/lib`: storage, notifications, seed data, types
 
-## Current features (starter)
+## Current features
 - Bottom tabs: Home, Meds, Symptoms, Checklist, Caregiver, Settings
-- Seed data for meds, symptoms, checklist
+- Add flows for medications, symptoms, checklist, and caregiver symptom logging
 - Local persistence via AsyncStorage; daily checklist resets
-- Local notifications helper wired to meds screen for scheduling reminders
+- Local notifications scheduling for medication reminders
 
 ## Next steps (MVP outline)
-- Flesh out CRUD for medications and symptoms; add forms and validation
-- Persist data (extend local storage; optional cloud sync later)
+- Add edit/delete for medications, symptoms, and checklist items
 - Add onboarding to capture user profile and notification permissions
 - Implement testing (unit for scheduling logic, component tests for screens)
 - Prepare release artifacts: Android `.apk` (and `.ipa` if targeting iOS) plus installation guide
+
+## APK installation (to be added on release)
+1) Download the APK from the release link.
+2) On Android, enable "Install unknown apps" for your file manager or browser.
+3) Open the APK and complete installation.
+4) Launch CareWell from your app list.
+5) If you see a Play Protect warning, confirm you want to install.
 
 ## Assignment alignment
 - New solution with customer value, real code, mobile UI, meaningful test data
