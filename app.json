@@ -5,10 +5,23 @@
     "version": "0.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "platforms": ["android", "ios"],
-    "assetBundlePatterns": ["**/*"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "updates": {
       "fallbackToCacheTimeout": 0
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c6321888-90a9-475f-8c60-0dcaa82fd086"
+      }
+    },
+    "android": {
+      "package": "com.cbarredez.carewell"
     }
   }
 }
