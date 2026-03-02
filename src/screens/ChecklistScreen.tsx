@@ -8,6 +8,7 @@ const ChecklistScreen = () => {
   const theme = useTheme();
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState('');
 
   useEffect(() => {
@@ -20,23 +21,51 @@ const ChecklistScreen = () => {
     await saveChecklist(updated);
   };
 
-  const resetForm = () => setLabel('');
+  const resetForm = () => {
+    setLabel('');
+    setEditingId(null);
+  };
 
-  const addItem = async () => {
+  const saveItem = async () => {
     if (!label.trim()) {
       Alert.alert('Missing label', 'Please enter a checklist item.');
       return;
     }
-    const newItem: ChecklistItem = {
-      id: `chk-${Date.now()}`,
-      label: label.trim(),
-      done: false
-    };
-    const updated = [newItem, ...items];
+    const updated = editingId
+      ? items.map(item => (item.id === editingId ? { ...item, label: label.trim() } : item))
+      : [
+          {
+            id: `chk-${Date.now()}`,
+            label: label.trim(),
+            done: false
+          },
+          ...items
+        ];
     setItems(updated);
     await saveChecklist(updated);
     setIsAdding(false);
     resetForm();
+  };
+
+  const startEdit = (item: ChecklistItem) => {
+    setEditingId(item.id);
+    setLabel(item.label);
+    setIsAdding(true);
+  };
+
+  const deleteItem = (item: ChecklistItem) => {
+    Alert.alert('Delete item', `Remove "${item.label}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const updated = items.filter(entry => entry.id !== item.id);
+          setItems(updated);
+          await saveChecklist(updated);
+        }
+      }
+    ]);
   };
 
   return (
@@ -45,7 +74,10 @@ const ChecklistScreen = () => {
         <Text style={[styles.title, { color: theme.colors.text }]}>Daily checklist</Text>
         <TouchableOpacity
           style={[styles.secondaryBtn, { borderColor: theme.colors.border }]}
-          onPress={() => setIsAdding(true)}
+          onPress={() => {
+            resetForm();
+            setIsAdding(true);
+          }}
         >
           <Text style={[styles.secondaryText, { color: theme.colors.text }]}>Add</Text>
         </TouchableOpacity>
@@ -54,17 +86,29 @@ const ChecklistScreen = () => {
         data={items}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.item, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
-            onPress={() => toggle(item.id)}
+          <View style={[styles.item, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
           >
-            <View style={styles.row}>
+            <TouchableOpacity style={styles.row} onPress={() => toggle(item.id)}>
               <Text style={[styles.label, { color: theme.colors.text }]}>{item.label}</Text>
               <View
                 style={[styles.checkbox, { borderColor: theme.colors.border, backgroundColor: item.done ? theme.colors.primary : '#fff' }]}
               />
+            </TouchableOpacity>
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => startEdit(item)}
+              >
+                <Text style={[styles.actionText, { color: theme.colors.text }]}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => deleteItem(item)}
+              >
+                <Text style={[styles.deleteText, { color: theme.colors.primary }]}>Delete</Text>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
       />
@@ -72,7 +116,9 @@ const ChecklistScreen = () => {
       <Modal visible={isAdding} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: theme.colors.card }]}> 
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add checklist item</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {editingId ? 'Edit checklist item' : 'Add checklist item'}
+            </Text>
             <TextInput
               placeholder="Label"
               value={label}
@@ -81,10 +127,16 @@ const ChecklistScreen = () => {
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.cancelBtn, { borderColor: theme.colors.border }]} onPress={() => setIsAdding(false)}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { borderColor: theme.colors.border }]}
+                onPress={() => {
+                  setIsAdding(false);
+                  resetForm();
+                }}
+              >
                 <Text style={{ color: theme.colors.text }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={addItem}>
+              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={saveItem}>
                 <Text style={styles.btnText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -139,6 +191,24 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 10
+  },
+  actionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  actionText: {
+    fontWeight: '600'
+  },
+  deleteText: {
+    fontWeight: '600'
   },
   note: {
     marginTop: 12,

@@ -14,6 +14,7 @@ const MedsScreen = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [scheduling, setScheduling] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [timesText, setTimesText] = useState('');
@@ -68,13 +69,14 @@ const MedsScreen = () => {
     setDosage('');
     setTimesText('');
     setDays(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
+    setEditingId(null);
   };
 
   const toggleDay = (day: Weekday) => {
     setDays(prev => (prev.includes(day) ? prev.filter(item => item !== day) : [...prev, day]));
   };
 
-  const addMedication = async () => {
+  const saveMedication = async () => {
     const times = timesText
       .split(',')
       .map(item => item.trim())
@@ -85,19 +87,51 @@ const MedsScreen = () => {
       return;
     }
 
-    const newMed: Medication = {
-      id: `med-${Date.now()}`,
-      name: name.trim(),
-      dosage: dosage.trim(),
-      times,
-      days
-    };
+    const updated = editingId
+      ? medications.map(item =>
+          item.id === editingId
+            ? { ...item, name: name.trim(), dosage: dosage.trim(), times, days }
+            : item
+        )
+      : [
+          {
+            id: `med-${Date.now()}`,
+            name: name.trim(),
+            dosage: dosage.trim(),
+            times,
+            days
+          },
+          ...medications
+        ];
 
-    const updated = [newMed, ...medications];
     setMedications(updated);
     await saveMedications(updated);
     setIsAdding(false);
     resetForm();
+  };
+
+  const startEdit = (med: Medication) => {
+    setEditingId(med.id);
+    setName(med.name);
+    setDosage(med.dosage);
+    setTimesText(med.times.join(', '));
+    setDays(med.days);
+    setIsAdding(true);
+  };
+
+  const deleteMedication = (med: Medication) => {
+    Alert.alert('Delete medication', `Remove ${med.name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const updated = medications.filter(item => item.id !== med.id);
+          setMedications(updated);
+          await saveMedications(updated);
+        }
+      }
+    ]);
   };
 
   return (
@@ -107,7 +141,10 @@ const MedsScreen = () => {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.secondaryBtn, { borderColor: theme.colors.border }]}
-            onPress={() => setIsAdding(true)}
+            onPress={() => {
+              resetForm();
+              setIsAdding(true);
+            }}
           >
             <Text style={[styles.secondaryText, { color: theme.colors.text }]}>Add</Text>
           </TouchableOpacity>
@@ -130,6 +167,20 @@ const MedsScreen = () => {
             <Text style={{ color: theme.colors.muted }}>Times: {item.times.join(', ')}</Text>
             <Text style={{ color: theme.colors.muted }}>Days: {item.days.join(', ')}</Text>
             {item.notes ? <Text style={{ color: theme.colors.muted }}>{item.notes}</Text> : null}
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => startEdit(item)}
+              >
+                <Text style={[styles.actionText, { color: theme.colors.text }]}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => deleteMedication(item)}
+              >
+                <Text style={[styles.deleteText, { color: theme.colors.primary }]}>Delete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
@@ -137,7 +188,9 @@ const MedsScreen = () => {
       <Modal visible={isAdding} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: theme.colors.card }]}> 
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add medication</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {editingId ? 'Edit medication' : 'Add medication'}
+            </Text>
             <TextInput
               placeholder="Name"
               value={name}
@@ -185,10 +238,16 @@ const MedsScreen = () => {
               ))}
             </View>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.cancelBtn, { borderColor: theme.colors.border }]} onPress={() => setIsAdding(false)}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { borderColor: theme.colors.border }]}
+                onPress={() => {
+                  setIsAdding(false);
+                  resetForm();
+                }}
+              >
                 <Text style={{ color: theme.colors.text }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={addMedication}>
+              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={saveMedication}>
                 <Text style={styles.btnText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -245,6 +304,24 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
+    fontWeight: '600'
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 10
+  },
+  actionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  actionText: {
+    fontWeight: '600'
+  },
+  deleteText: {
     fontWeight: '600'
   },
   modalBackdrop: {

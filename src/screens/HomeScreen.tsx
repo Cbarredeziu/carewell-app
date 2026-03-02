@@ -37,6 +37,12 @@ const HomeScreen = () => {
         >
           <Text style={styles.buttonText}>Open daily checklist</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: theme.colors.text }]}
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Text style={styles.buttonText}>Update personal info</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

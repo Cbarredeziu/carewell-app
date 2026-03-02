@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Medication, SymptomEntry, ChecklistItem } from './types';
+import { Medication, SymptomEntry, ChecklistItem, UserProfile } from './types';
 import { seedMedications, seedSymptoms, seedChecklist } from './seed';
 
 const STORAGE_KEYS = {
   medications: '@cuidabien/medications',
   symptoms: '@cuidabien/symptoms',
-  checklist: '@cuidabien/checklist'
+  checklist: '@cuidabien/checklist',
+  profile: '@carewell/profile'
 } as const;
 
 const getLocalDateKey = () => {
@@ -56,4 +57,12 @@ export async function loadChecklist(): Promise<ChecklistItem[]> {
 export async function saveChecklist(list: ChecklistItem[]): Promise<void> {
   const todayKey = `${STORAGE_KEYS.checklist}-${getLocalDateKey()}`;
   return writeJson(todayKey, list);
+}
+
+export async function loadProfile(): Promise<UserProfile> {
+  return readJson(STORAGE_KEYS.profile, { fullName: '', bloodType: '', notes: '' });
+}
+
+export async function saveProfile(profile: UserProfile): Promise<void> {
+  return writeJson(STORAGE_KEYS.profile, profile);
 }

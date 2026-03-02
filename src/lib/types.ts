@@ -39,3 +39,9 @@ export type CaregiverSummary = {
   adherencePercent: number;
   recentSymptoms: SymptomEntry[];
 };
+
+export type UserProfile = {
+  fullName: string;
+  bloodType: string;
+  notes: string;
+};

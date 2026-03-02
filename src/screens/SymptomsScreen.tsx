@@ -14,6 +14,7 @@ const SymptomsScreen = () => {
   const theme = useTheme();
   const [symptoms, setSymptoms] = useState<SymptomEntry[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [severity, setSeverity] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [note, setNote] = useState('');
 
@@ -24,24 +25,53 @@ const SymptomsScreen = () => {
   const resetForm = () => {
     setSeverity(3);
     setNote('');
+    setEditingId(null);
   };
 
-  const addSymptom = async () => {
+  const saveSymptom = async () => {
     if (!note.trim()) {
       Alert.alert('Missing note', 'Please add a short note.');
       return;
     }
-    const entry: SymptomEntry = {
-      id: `symp-${Date.now()}`,
-      severity,
-      note: note.trim(),
-      recordedAt: new Date().toISOString()
-    };
-    const updated = [entry, ...symptoms];
+    const updated = editingId
+      ? symptoms.map(item =>
+          item.id === editingId ? { ...item, severity, note: note.trim() } : item
+        )
+      : [
+          {
+            id: `symp-${Date.now()}`,
+            severity,
+            note: note.trim(),
+            recordedAt: new Date().toISOString()
+          },
+          ...symptoms
+        ];
     setSymptoms(updated);
     await saveSymptoms(updated);
     setIsAdding(false);
     resetForm();
+  };
+
+  const startEdit = (item: SymptomEntry) => {
+    setEditingId(item.id);
+    setSeverity(item.severity);
+    setNote(item.note);
+    setIsAdding(true);
+  };
+
+  const deleteSymptom = (item: SymptomEntry) => {
+    Alert.alert('Delete symptom', 'Remove this symptom entry?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const updated = symptoms.filter(entry => entry.id !== item.id);
+          setSymptoms(updated);
+          await saveSymptoms(updated);
+        }
+      }
+    ]);
   };
 
   return (
@@ -50,7 +80,10 @@ const SymptomsScreen = () => {
         <Text style={[styles.title, { color: theme.colors.text }]}>Symptoms</Text>
         <TouchableOpacity
           style={[styles.secondaryBtn, { borderColor: theme.colors.border }]}
-          onPress={() => setIsAdding(true)}
+          onPress={() => {
+            resetForm();
+            setIsAdding(true);
+          }}
         >
           <Text style={[styles.secondaryText, { color: theme.colors.text }]}>Add</Text>
         </TouchableOpacity>
@@ -70,6 +103,20 @@ const SymptomsScreen = () => {
             <Text style={{ color: theme.colors.muted, marginTop: 8 }}>
               {new Date(item.recordedAt).toLocaleString()}
             </Text>
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => startEdit(item)}
+              >
+                <Text style={[styles.actionText, { color: theme.colors.text }]}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: theme.colors.border }]}
+                onPress={() => deleteSymptom(item)}
+              >
+                <Text style={[styles.deleteText, { color: theme.colors.primary }]}>Delete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
@@ -77,7 +124,9 @@ const SymptomsScreen = () => {
       <Modal visible={isAdding} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: theme.colors.card }]}> 
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Log symptom</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              {editingId ? 'Edit symptom' : 'Log symptom'}
+            </Text>
             <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>Severity</Text>
             <View style={styles.severityRow}>
               {[1, 2, 3, 4, 5].map(level => (
@@ -105,10 +154,16 @@ const SymptomsScreen = () => {
               multiline
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.cancelBtn, { borderColor: theme.colors.border }]} onPress={() => setIsAdding(false)}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { borderColor: theme.colors.border }]}
+                onPress={() => {
+                  setIsAdding(false);
+                  resetForm();
+                }}
+              >
                 <Text style={{ color: theme.colors.text }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={addSymptom}>
+              <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={saveSymptom}>
                 <Text style={styles.btnText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -166,6 +221,24 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontWeight: '700'
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 10
+  },
+  actionBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  actionText: {
+    fontWeight: '600'
+  },
+  deleteText: {
+    fontWeight: '600'
   },
   modalBackdrop: {
     flex: 1,
