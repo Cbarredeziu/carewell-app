@@ -66,3 +66,15 @@ export async function loadProfile(): Promise<UserProfile> {
 export async function saveProfile(profile: UserProfile): Promise<void> {
   return writeJson(STORAGE_KEYS.profile, profile);
 }
+
+export type DoseStatus = 'taken' | 'skipped';
+
+export async function loadDailyDoseStatuses(): Promise<Record<string, DoseStatus>> {
+  const key = `@carewell/doses-${getLocalDateKey()}`;
+  return readJson(key, {});
+}
+
+export async function saveDailyDoseStatuses(statuses: Record<string, DoseStatus>): Promise<void> {
+  const key = `@carewell/doses-${getLocalDateKey()}`;
+  return writeJson(key, statuses);
+}

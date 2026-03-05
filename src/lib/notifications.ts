@@ -4,7 +4,8 @@ import { Medication, Weekday } from './types';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false
   })
@@ -104,4 +105,21 @@ export async function scheduleMedicationNotifications(med: Medication) {
 
 export async function cancelAllMedicationNotifications() {
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+/** Fires a test notification in N seconds (default 5). Development use only. */
+export async function scheduleTestNotification(seconds = 5): Promise<string> {
+  await configureAndroidChannel();
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: '🧪 Test notification',
+      body: 'If you see this, notifications are working correctly.',
+      sound: 'default'
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds,
+      channelId: Platform.OS === 'android' ? 'medications' : undefined
+    }
+  });
 }

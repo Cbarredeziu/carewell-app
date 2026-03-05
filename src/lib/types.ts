@@ -1,5 +1,7 @@
 export type Weekday = 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
+export type ScheduleMode = 'fixed' | 'periodic';
+
 export type Medication = {
   id: string;
   name: string;
@@ -7,8 +9,11 @@ export type Medication = {
   times: string[]; // HH:mm in 24h
   days: Weekday[]; // days of week when active
   startDate?: string; // ISO date
-  endDate?: string; // ISO date
+  endDate?: string; // ISO date — undefined means chronic
   notes?: string;
+  scheduleMode?: ScheduleMode;
+  intervalHours?: number; // only for periodic mode
+  imageUri?: string; // local path to medication image
 };
 
 export type DoseEventStatus = 'scheduled' | 'taken' | 'skipped';
